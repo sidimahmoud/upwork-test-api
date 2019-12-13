@@ -1,0 +1,100 @@
+<?php
+
+namespace DummyTestNamespace;
+
+use DummyModuleNamespace\Contracts\Repositories\DummyClassRepository;
+use NamespacedDummyModel;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Tests\TestCase;
+
+class DummyClassUnitTest extends TestCase
+{
+    const DUMMY_TABLE_NAME = 'dummyTableName';
+
+    /**
+     * @var DummyClassRepository
+     */
+    private $dummyRepository;
+
+    /**
+     * Setup the test
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        $this->dummyRepository = resolve(DummyClassRepository::class);
+    }
+
+    /** @test */
+    public function it_can_create_dummySnakeModel()
+    {
+        $data = factory(DummyClass::class)->make()->toArray();
+        $dummyModel = $this->dummyRepository->create($data);
+        $this->assertInstanceOf(DummyClass::class, $dummyModel);
+        $this->assertDatabaseHas(self::DUMMY_TABLE_NAME, $data);
+    }
+
+    /** @test */
+    public function it_can_find_dummySnakeModel_by_id()
+    {
+        $dummyModel = factory(DummyClass::class)->create();
+        factory(DummyClass::class)->create();
+        $_dummyModel = $this->dummyRepository->findById($dummyModel->id);
+        $this->assertInstanceOf(DummyClass::class, $_dummyModel);
+        $this->assertEquals($dummyModel->id, $_dummyModel->id);
+    }
+
+    /** @test */
+    public function it_can_find_dummyPluralSnakeModel()
+    {
+        $dummyModel = factory(DummyClass::class)->create();
+        $dummyPluralModel = $this->dummyRepository->get();
+        $this->assertInstanceOf(Collection::class, $dummyPluralModel);
+        $this->assertCount(1, $dummyPluralModel);
+        $dummyPluralModel->each(function ($_dummyModel) use ($dummyModel) {
+            $this->assertInstanceOf(DummyClass::class, $_dummyModel);
+            $this->assertEquals($dummyModel->id, $_dummyModel->id);
+        });
+    }
+
+    /** @test */
+    public function it_can_paginate_dummyPluralSnakeModel()
+    {
+        $dummyModel = factory(DummyClass::class)->create();
+        $dummyPluralModel = $this->dummyRepository->paginate();
+        $this->assertInstanceOf(LengthAwarePaginator::class, $dummyPluralModel);
+        $this->assertCount(1, $dummyPluralModel->items());
+        collect($dummyPluralModel->items())->each(function ($_dummyModel) use ($dummyModel) {
+            $this->assertInstanceOf(DummyClass::class, $_dummyModel);
+            $this->assertEquals($dummyModel->id, $_dummyModel->id);
+        });
+    }
+
+    /** @test */
+    public function it_can_update_the_dummySnakeModel()
+    {
+        $dummyModel = factory(DummyClass::class)->create();
+        $data = factory(DummyClass::class)->make()->toArray();
+        $this->dummyRepository->setModel($dummyModel);
+        $this->dummyRepository->update($data);
+        $this->assertDatabaseHas(self::DUMMY_TABLE_NAME, array_merge($data, [
+            'id' => $dummyModel->id
+        ]));
+    }
+
+    /** @test */
+    public function it_can_delete_the_dummySnakeModel()
+    {
+        $dummyModel = factory(DummyClass::class)->create();
+        $_dummyModel = factory(DummyClass::class)->create();
+        $this->dummyRepository->setModel($dummyModel);
+        $this->dummyRepository->delete();
+        $this->assertDatabaseMissing(self::DUMMY_TABLE_NAME, [
+            'id' => $dummyModel->id
+        ]);
+        $this->assertDatabaseHas(self::DUMMY_TABLE_NAME, [
+            'id' => $_dummyModel->id
+        ]);
+    }
+}

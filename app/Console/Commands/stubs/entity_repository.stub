@@ -1,0 +1,38 @@
+<?php
+
+namespace DummyNamespace;
+
+use DummyModuleNamespace\Contracts\Repositories\DummyClassRepository as DummyClassRepositoryContract;
+use League\Fractal\TransformerAbstract;
+use NamespacedDummyModel;
+use DummyModuleNamespace\Transformers\DummyClassTransformer;
+use App\Modules\BaseModule\Repositories\BaseRepository;
+
+class DummyClassRepository extends BaseRepository implements DummyClassRepositoryContract
+{
+    /**
+     * DummyClassRepository constructor.
+     *
+     * @param DummyClass $model
+     */
+    public function __construct(DummyClass $model)
+    {
+        parent::__construct($model);
+    }
+
+    /**
+     * @return TransformerAbstract
+     */
+    public function getTransformer(): TransformerAbstract
+    {
+        return new DummyClassTransformer;
+    }
+
+    /**
+     * @return string
+     */
+    public function getResourceKey(): string
+    {
+        return 'dummyResourceKey';
+    }
+}

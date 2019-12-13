@@ -1,0 +1,109 @@
+<?php
+
+namespace DummyNamespace;
+
+use DummyModuleNamespace\Contracts\Repositories\DummyClassRepository;
+use DummyModuleNamespace\Requests\CreateDummyClassRequest;
+use DummyModuleNamespace\Requests\UpdateDummyClassRequest;
+use DummyModuleNamespace\DummyClass;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+
+class DummyPluralClassController extends Controller
+{
+    /**
+     * @var DummyClassRepository
+     */
+    private $dummyRepository;
+
+    /**
+     * @var array
+     */
+    private $includes;
+
+    /**
+     * DummyPluralClassController constructor.
+     *
+     * @param DummyClassRepository $dummyRepository
+     */
+    public function __construct(DummyClassRepository $dummyRepository, Request $request)
+    {
+        $this->dummyRepository = $dummyRepository;
+        $this->includes = $request->has('include') ? explode(',', $request->input('include')) : [];
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        if (request()->has('all')) {
+            $dummyPluralModel = $this->dummyRepository->get();
+        } else {
+            $dummyPluralModel = $this->dummyRepository->paginate();
+        }
+        $data = $this->dummyRepository->transformCollection($dummyPluralModel);
+        return response()->json($data);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param CreateDummyClassRequest $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(CreateDummyClassRequest $request)
+    {
+        $dummyModel = $this->dummyRepository->create($request->all())
+            ->load(includes_to_camel_case($this->includes));
+        $this->dummyRepository->setModel($dummyModel);
+        $data = $this->dummyRepository->transformItem($this->includes);
+        return response()->json($data, 201);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param int $dummyModelId
+     * @return \Illuminate\Http\Response
+     */
+    public function show(int $dummyModelId)
+    {
+        $dummyModel = $this->dummyRepository->findById($dummyModelId);
+        $this->dummyRepository->setModel($dummyModel);
+        $data = $this->dummyRepository->transformItem();
+        return response()->json($data);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param UpdateDummyClassRequest $request
+     * @param DummyClass $dummyModel
+     * @return \Illuminate\Http\Response
+     */
+    public function update(UpdateDummyClassRequest $request, DummyClass $dummyModel)
+    {
+        $this->dummyRepository->setModel($dummyModel);
+        $this->dummyRepository->update($request->all());
+        $dummyModel->load(includes_to_camel_case($this->includes));
+        $data = $this->dummyRepository->transformItem();
+        return response()->json($data);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param DummyClass $dummyModel
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(DummyClass $dummyModel)
+    {
+        $this->dummyRepository->setModel($dummyModel);
+        $this->dummyRepository->delete();
+        $data = $this->dummyRepository->transformNull();
+        return response()->json($data, 202);
+    }
+}
