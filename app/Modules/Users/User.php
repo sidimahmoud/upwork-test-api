@@ -12,22 +12,14 @@ class User extends Authenticatable
     //use PaginationTrait;
     use HasApiTokens, Notifiable;
     protected $table = 'users';
-    const TYPE = [
-        'ADMIN' => 1,
-        'AGENT' => 2,
-    ];
+
     protected $fillable = [
         'name',
         'email',
-        'password',
-        'type',
-        'username',
-        'gender',
-        'mobile',
+        'phone_number',
+        'address',
+        'zip_code',
+        'user_image',
     ];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
 }
